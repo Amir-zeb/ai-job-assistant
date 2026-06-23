@@ -1,4 +1,5 @@
-export function calculateInterestScore(description: string): number {
+// app/lib/ruleBasedAnalysis/score.ts
+export function calculateScore(description: string): number {
     const text = description.toLowerCase();
 
     let score = 0;

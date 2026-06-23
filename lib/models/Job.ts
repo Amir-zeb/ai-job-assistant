@@ -12,6 +12,7 @@ const JobSchema = new mongoose.Schema({
     description: String,
     source: String,
     aiScore: { type: Number, default: 0 },
+    ruleBasedScore: { type: Number, default: 0 },
     isRelevant: { type: Boolean, default: false },
     aiReason: { type: String, default: "" },
     aiRated: { type: Boolean, default: false },
