@@ -18,8 +18,8 @@ export default async function Home() {
   const totalRatedJobs: number = await Job.countDocuments({ aiRated: true });
   const totalUnratedJobs: number = await Job.countDocuments({ aiRated: false });
   const totalBestMatchJobs: number = await Job.countDocuments({
-    aiRated: true,
-    aiScore: { $gte: 80 },
+    isRelevant: true,
+    ruleBasedScore: { $gte: 75 },
   });
 
   return (
@@ -36,9 +36,9 @@ export default async function Home() {
           <StatCard title="Total Jobs" value={totalJobs} />
           <StatCard title="Total Rated Jobs" value={totalRatedJobs} />
           <StatCard title="Total Unrated Jobs" value={totalUnratedJobs} />
-          <StatCard title="Best Match Jobs (≥ 80)" value={totalBestMatchJobs} />
+          <StatCard title="Best Match Jobs (≥ 75)" value={totalBestMatchJobs} />
         </div>
-
+        
         {/* Navigation */}
         <div className="text-center mt-10">
           <Link
