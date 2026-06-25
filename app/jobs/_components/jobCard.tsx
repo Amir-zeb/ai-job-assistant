@@ -8,10 +8,12 @@ type Props = {
 };
 
 const JobCard = ({ job, setSelectedJob }: Props) => {
-    const score = Number(job.aiScore || 0);
+    const score = Number(job?.analysis?.aiScore || 0);
+    const isAnalyzed = job?.analysis?.isAnalyzed || false
+    const aiReason = job?.analysis?.reason || 'Job not analyzed yet.'
 
     const getBadgeStyles = () => {
-        if (!job.aiRated) {
+        if (!isAnalyzed) {
             return "bg-gray-100 text-gray-500 border-gray-200";
         }
 
@@ -52,7 +54,7 @@ const JobCard = ({ job, setSelectedJob }: Props) => {
                         <span
                             className={`px-3 py-1 text-xs font-semibold rounded-full border ${getBadgeStyles()}`}
                         >
-                            {job.aiRated ? `Score: ${score}` : "Not Rated"}
+                            {isAnalyzed ? `Score: ${score}` : "Not Rated"}
                         </span>
                         {/* Rule-Based Score Badge */}
                         <span
@@ -77,7 +79,7 @@ const JobCard = ({ job, setSelectedJob }: Props) => {
                         AI Insight
                     </p>
                     <p className="text-sm text-gray-700 line-clamp-3">
-                        {job.aiReason || "Job not analyzed yet."}
+                        {aiReason}
                     </p>
                 </div>
             </div>
