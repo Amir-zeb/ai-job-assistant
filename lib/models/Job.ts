@@ -11,12 +11,24 @@ const JobSchema = new mongoose.Schema({
     postDate: Date,
     description: String,
     source: String,
-    aiScore: { type: Number, default: 0 },
     ruleBasedScore: { type: Number, default: 0 },
     isRelevant: { type: Boolean, default: false },
-    aiReason: { type: String, default: "" },
-    aiRated: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
+    analysis: {
+        isAnalyzed: { type: Boolean, default: false },
+        aiScore: { type: Number, default: 0 },
+        recommendation: { type: String, default: "" },
+        reason: { type: String, default: "" },
+        strengths: { type: [String], default: [] },
+        missingSkills: { type: [String], default: [] },
+        salaryAssessment: { type: String, default: "" },
+        coverLetter: { type: String, default: "" },
+        email: {
+            subject: { type: String, default: "" },
+            body: { type: String, default: "" },
+        },
+        analyzedAt: Date,
+    }
 });
 
 export default mongoose.models.Job ||
