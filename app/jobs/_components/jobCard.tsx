@@ -51,22 +51,33 @@ const JobCard = ({ job, setSelectedJob }: Props) => {
 
                     <div className="flex flex-row items-end gap-1">
                         {/* Score Badge */}
-                        <span
-                            className={`px-3 py-1 text-xs font-semibold rounded-full border ${getBadgeStyles()}`}
-                        >
-                            {isAnalyzed ? `Score: ${score}` : "Not Rated"}
-                        </span>
-                        {/* Rule-Based Score Badge */}
-                        <span
-                            className={`px-3 py-1 text-xs font-semibold rounded-full border ${getBadgeStyles()}`}
-                        >
-                            {job.ruleBasedScore !== undefined ? `Score: ${job.ruleBasedScore}` : "Not Rated"}
-                        </span>
-                        <span
-                            className={`px-3 py-1 text-xs font-semibold rounded-full border ${getBadgeStyles()}`}
-                        >
-                            {job.isRelevant !== undefined ? `Relevance: ${job.isRelevant ? 'High' : 'Low'}` : "Not Rated"}
-                        </span>
+                        {isAnalyzed ?
+                            <>
+                                <span
+                                    className={`px-3 py-1 text-xs font-semibold rounded-full border ${getBadgeStyles()}`}
+                                >
+                                    {isAnalyzed ? `Ai Score: ${score}` : "Not Rated"}
+                                </span>
+                                <span
+                                    className={`px-3 py-1 text-xs font-semibold rounded-full border ${getBadgeStyles()}`}
+                                >
+                                    {isAnalyzed ? `Recommendation: ${job?.analysis?.recommendation}` : ""}
+                                </span>
+                            </> :
+                            <>
+                                {/* Rule-Based Score Badge */}
+                                <span
+                                    className={`px-3 py-1 text-xs font-semibold rounded-full border ${getBadgeStyles()}`}
+                                >
+                                    {job.ruleBasedScore !== undefined ? `Score: ${job.ruleBasedScore}` : "Not Rated"}
+                                </span>
+                                <span
+                                    className={`px-3 py-1 text-xs font-semibold rounded-full border ${getBadgeStyles()}`}
+                                >
+                                    {job.isRelevant !== undefined ? `Relevance: ${job.isRelevant ? 'High' : 'Low'}` : "Not Rated"}
+                                </span>
+                            </>
+                        }
                     </div>
                 </div>
 

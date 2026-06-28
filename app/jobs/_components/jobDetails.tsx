@@ -1,6 +1,7 @@
 "use client";
 import * as React from 'react';
 import { JobT } from "@/lib/types";
+import Accordion from './accordion';
 
 type Props = {
     jobDetails: JobT;
@@ -9,9 +10,15 @@ type Props = {
 const JobDetails = ({ jobDetails }: Props) => {
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState<string | unknown>(null);
-    const score = Number(jobDetails?.analysis?.aiScore || 0);
-    const isAnalyzed = jobDetails?.analysis?.isAnalyzed || false;
-    const aiReason = jobDetails?.analysis?.reason || 'Job not analyzed yet.';
+
+    const analysis = jobDetails?.analysis
+    const score = Number(analysis?.aiScore || 0);
+    const isAnalyzed = analysis?.isAnalyzed || false;
+    const aiReason = analysis?.reason || 'Job not analyzed yet.';
+    const strengths = analysis?.strengths.join(', ');
+    const missingSkills = analysis?.missingSkills.join(', ');
+    const salaryAssessment = analysis?.salaryAssessment;
+    const coverLetter = analysis?.coverLetter;
 
     React.useEffect(() => {
         console.log(isLoading, error);
@@ -65,6 +72,78 @@ const JobDetails = ({ jobDetails }: Props) => {
         }
     };
 
+    const AiInsight = () => (
+        <>
+            <p className="text-sm text-gray-700 mb-2">
+                {aiReason}
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+                <strong>Strengths:</strong> {strengths}
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+                <strong>Missing Skills:</strong> {missingSkills}
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+                <strong>Salary Assessment:</strong> {salaryAssessment}
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+                <strong>Cover Letter:</strong> {coverLetter}
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+                <strong>Email:</strong>
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+                <strong>Subject:</strong> {analysis?.email?.subject}
+                <br />
+                <strong>Body:</strong> {analysis?.email?.body}
+            </p>
+            <div className="text-center mt-10 flex flex-row justify-center gap-1">
+                <button
+                    className="inline-block text-base text-[12px] px-2 py-2 bg-black text-white rounded-lg hover:opacity-90 transition"
+                    onClick={() => { }}
+                    disabled={isAnalyzed}
+                >
+                    Cover Letter
+                </button>
+                <button
+                    className="inline-block text-base text-[12px] px-2 py-2 bg-black text-white rounded-lg hover:opacity-90 transition"
+                    onClick={() => { }}
+                    disabled={isAnalyzed}
+                >
+                    Email
+                </button>
+            </div>
+        </>
+    )
+
+    const faqItems = [
+        ...(isAnalyzed ? [{ title: 'AI Insight', content: AiInsight() }] : []),
+        {
+            title: 'Job Ad', content: <>
+                {/* Job Description */}
+                <div className="prose prose-sm max-w-none text-gray-800">
+                    <div
+                        dangerouslySetInnerHTML={{
+                            __html: jobDetails.description || "<p>No description available.</p>",
+                        }}
+                    />
+                </div>
+
+                {/* Apply Button */}
+                <div className="text-center mt-10 flex flex-row justify-center gap-1">
+                    <a
+                        href={jobDetails.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block px-6 py-3 bg-black text-white rounded-lg hover:opacity-90 transition"
+                    >
+                        View Original Job →
+                    </a>
+                </div>
+            </>
+        },
+    ];
+
     return (
         <div className="flex-1 h-screen overflow-y-auto sticky top-0 bg-gray-50 border-l">
             <div className="max-w-3xl mx-auto p-8">
@@ -82,6 +161,13 @@ const JobDetails = ({ jobDetails }: Props) => {
                             <p className="text-sm text-gray-400">
                                 {jobDetails.location || "Remote"}
                             </p>
+                            {!isAnalyzed && <button
+                                className="inline-block mt-2 px-6 py-2 text-[14px] mb-4 bg-black text-white rounded-lg hover:opacity-90 transition"
+                                onClick={analyzeJob}
+                                disabled={isAnalyzed}
+                            >
+                                {isLoading?"...Server Request":"Analyze Job"}
+                            </button>}
                         </div>
 
                         <span
@@ -96,46 +182,7 @@ const JobDetails = ({ jobDetails }: Props) => {
 
                 {/* Divider */}
                 <div className="border-t mb-6" />
-
-                {/* AI Insight */}
-                {isAnalyzed && (
-                    <div className="mb-6 bg-white border rounded-lg p-4 shadow-sm">
-                        <p className="text-xs font-medium text-gray-500 mb-1">
-                            AI Insight
-                        </p>
-                        <p className="text-sm text-gray-700">
-                            {aiReason}
-                        </p>
-                    </div>
-                )}
-
-                {/* Job Description */}
-                <div className="prose prose-sm max-w-none text-gray-800">
-                    <div
-                        dangerouslySetInnerHTML={{
-                            __html: jobDetails.description || "<p>No description available.</p>",
-                        }}
-                    />
-                </div>
-
-                {/* Apply Button */}
-                <div className="text-center mt-10 flex flex-row justify-center gap-1">
-                    <button
-                        className="inline-block px-6 py-3 bg-black text-white rounded-lg hover:opacity-90 transition"
-                        onClick={analyzeJob}
-                        disabled={isAnalyzed}
-                    >
-                        Analyze job
-                    </button>
-                    <a
-                        href={jobDetails.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block px-6 py-3 bg-black text-white rounded-lg hover:opacity-90 transition"
-                    >
-                        View Original Job →
-                    </a>
-                </div>
+                <Accordion items={faqItems} />
             </div>
         </div>
     );
