@@ -21,7 +21,19 @@ export const jobAnalysisSchema = {
         missingSkills: {
             type: SchemaType.ARRAY,
             items: {
-                type: SchemaType.STRING,
+                type: SchemaType.OBJECT,
+                properties: {
+                    skill: {
+                        type: SchemaType.STRING,
+                    },
+                    priority: {
+                        type: SchemaType.STRING,
+                    },
+                    reason: {
+                        type: SchemaType.STRING,
+                    },
+                },
+                required: ["skill", "priority", "reason"],
             },
         },
         salaryAssessment: {
