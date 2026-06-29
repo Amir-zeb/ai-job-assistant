@@ -21,6 +21,14 @@ export default async function JobsPage() {
     const formattedJobs: JobT[] = jobs.map((job: any) => ({
         ...job,
         _id: job._id.toString(),
+        analysis: {
+            ...job.analysis,
+            missingSkills:
+                Array.isArray(job.analysis?.missingSkills) && job.analysis?.missingSkills.length
+                    ? job.analysis?.missingSkills?.map(
+                        ({ _id, ...skill }: any) => skill
+                    ) : [],
+        },
     }));
 
     return (
