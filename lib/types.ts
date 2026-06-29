@@ -4,7 +4,7 @@ export type JobAnalysisT = {
     recommendation: string;
     reason: string;
     strengths: string[];
-    missingSkills: string[];
+    missingSkills?: MissingSkillT[];
     salaryAssessment: string;
     coverLetter: string;
     email: {
@@ -12,6 +12,12 @@ export type JobAnalysisT = {
         body: string;
     };
     analyzedAt?: Date;
+};
+
+export type MissingSkillT = {
+    skill: string;
+    priority: "High" | "Medium" | "Low";
+    reason: string;
 };
 
 export type JobT = {
