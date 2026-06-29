@@ -29,19 +29,57 @@ Return ONLY valid JSON.
   "aiScore": number,
   "recommendation": "APPLY" | "CONSIDER" | "SKIP",
   "reason": string,
-  "strengths": string[],
-  "missingSkills": string[],
+  "strengths": [
+    string
+  ],
+  "missingSkills": [
+    {
+      "skill": string,
+      "priority": "High" | "Medium" | "Low",
+      "reason": string,
+    }
+  ],
   "salaryAssessment": string,
-  "coverLetter": string,
+  "coverLetter": {
+    "html": string
+  },
   "email": {
     "subject": string,
-    "body": string
+    "html": string
   }
 }
+
+Rules
+
+- aiScore: Integer between 0 and 100.
+- recommendation: Must be APPLY, CONSIDER, or SKIP.
+- reason: Maximum 80 words.
+- strengths: Maximum 5 items. Each item maximum 15 words.
+- missingSkills: Maximum 5 items. Only include skills that would significantly improve the candidate's chances.
+- priority: High, Medium, or Low.
+- missingSkills.reason: Maximum 20 words.
+- salaryAssessment: Maximum 40 words.
+
+Cover Letter Rules
+- 180-250 words.
+- Return as HTML fragment only.
+- Wrap each paragraph in <p> tags.
+- Do not include <html>, <head>, or <body>.
+- Do not use Markdown.
+- No inline CSS.
+
+Email Rules
+- Subject maximum 12 words.
+- Body 80-120 words.
+- Return as HTML fragment only.
+- Wrap each paragraph in <p> tags.
+- Do not include <html>, <head>, or <body>.
+- Do not use Markdown.
+- No inline CSS.
 `;
 
 export function buildJobAnalysisPrompt(job: JobT) {
-    return `
+  return `
 ${CANDIDATE_PROFILE}
 
 ${TASK}
