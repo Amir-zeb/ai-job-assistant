@@ -2,6 +2,7 @@
 import * as React from 'react';
 import { JobT } from "@/lib/types";
 import Accordion from './accordion';
+import ToastMessage from './toast';
 
 type Props = {
     jobDetails: JobT;
@@ -9,20 +10,17 @@ type Props = {
 
 const JobDetails = ({ jobDetails }: Props) => {
     const [isLoading, setIsLoading] = React.useState(false);
-    const [error, setError] = React.useState<string | unknown>(null);
+    const [message, setMessage] = React.useState<string | null>(null);
+    const [type, setType] = React.useState<'Error' | 'Success' | 'Warning' | null>(null);
 
     const analysis = jobDetails?.analysis
     const score = Number(analysis?.aiScore || 0);
     const isAnalyzed = analysis?.isAnalyzed || false;
     const aiReason = analysis?.reason || 'Job not analyzed yet.';
-    const strengths = analysis?.strengths.join(', ');
-    const missingSkills = analysis?.missingSkills.join(', ');
+    const strengths = Array.isArray(analysis?.strengths) ? analysis?.strengths.join(', ') : '';
+    const missingSkills = analysis?.missingSkills
     const salaryAssessment = analysis?.salaryAssessment;
     const coverLetter = analysis?.coverLetter;
-
-    React.useEffect(() => {
-        console.log(isLoading, error);
-    }, [isLoading, error]);
 
     const getBadgeStyles = () => {
         if (!isAnalyzed) {
@@ -43,7 +41,7 @@ const JobDetails = ({ jobDetails }: Props) => {
     const analyzeJob = async () => {
         try {
             setIsLoading(true);
-            setError(null);
+            setMessage(null);
 
             const res = await fetch("/api/agent/analyze", {
                 method: "POST",
@@ -58,15 +56,13 @@ const JobDetails = ({ jobDetails }: Props) => {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.message || "Failed to analyze job");
+                throw new Error(data?.message || "Failed to analyze job");
             }
-
-            console.log(data);
-
-            // We'll update the UI with the response later
+            setType('Success')
+            setMessage('Job analyzed successfully')
         } catch (error) {
-            console.error(error);
-            setError(error);
+            setType('Error')
+            setMessage(error instanceof Error ? error.message : 'Failed to analyze job');
         } finally {
             setIsLoading(false);
         }
@@ -81,23 +77,47 @@ const JobDetails = ({ jobDetails }: Props) => {
                 <strong>Strengths:</strong> {strengths}
             </p>
             <p className="text-sm text-gray-700 mb-2">
-                <strong>Missing Skills:</strong> {missingSkills}
+                <strong>Missing Skills:</strong>
+                <>
+                    {Array.isArray(missingSkills) && missingSkills.length ? missingSkills.map(({ skill, priority, reason }, i) => {
+                        return <React.Fragment key={i}>
+                            <br />
+                            <strong>Skill</strong>:{skill}
+                            <br />
+                            <strong>priority</strong>:{priority}
+                            <br />
+                            <strong>reason</strong>:{reason}
+                            {missingSkills.length > 1 && < hr />}
+                        </React.Fragment>
+                    }) : 'None'}
+                </>
             </p>
             <p className="text-sm text-gray-700 mb-2">
                 <strong>Salary Assessment:</strong> {salaryAssessment}
             </p>
-            <p className="text-sm text-gray-700 mb-2">
-                <strong>Cover Letter:</strong> {coverLetter}
+            <p className="text-sm text-gray-700">
+                <strong>Cover Letter:</strong>
+                <br />
             </p>
-            <p className="text-sm text-gray-700 mb-2">
+            <div
+                className='mb-2'
+                dangerouslySetInnerHTML={{
+                    __html: coverLetter || "<p>No description available.</p>",
+                }}
+            />
+            <p className="text-sm text-gray-700">
                 <strong>Email:</strong>
             </p>
-            <p className="text-sm text-gray-700 mb-2">
+            <p className="text-sm text-gray-700">
                 <strong>Subject:</strong> {analysis?.email?.subject}
-                <br />
-                <strong>Body:</strong> {analysis?.email?.body}
             </p>
-            <div className="text-center mt-10 flex flex-row justify-center gap-1">
+            <div
+                className='mb-2'
+                dangerouslySetInnerHTML={{
+                    __html: analysis?.email?.body || "<p>No description available.</p>",
+                }}
+            />
+            {/* <div className="text-center mt-10 flex flex-row justify-center gap-1">
                 <button
                     className="inline-block text-base text-[12px] px-2 py-2 bg-black text-white rounded-lg hover:opacity-90 transition"
                     onClick={() => { }}
@@ -112,7 +132,7 @@ const JobDetails = ({ jobDetails }: Props) => {
                 >
                     Email
                 </button>
-            </div>
+            </div> */}
         </>
     )
 
@@ -145,46 +165,49 @@ const JobDetails = ({ jobDetails }: Props) => {
     ];
 
     return (
-        <div className="flex-1 h-screen overflow-y-auto sticky top-0 bg-gray-50 border-l">
-            <div className="max-w-3xl mx-auto p-8">
+        <>
+            <div className="flex-1 h-screen overflow-y-auto sticky top-0 bg-gray-50 border-l">
+                <div className="max-w-3xl mx-auto p-8">
 
-                {/* Header Section */}
-                <div className="mb-6">
-                    <div className="flex justify-between items-start gap-4">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900">
-                                {jobDetails.title || "-"}
-                            </h2>
-                            <p className="text-gray-600 mt-1">
-                                {jobDetails.company || "-"}
-                            </p>
-                            <p className="text-sm text-gray-400">
-                                {jobDetails.location || "Remote"}
-                            </p>
-                            {!isAnalyzed && <button
-                                className="inline-block mt-2 px-6 py-2 text-[14px] mb-4 bg-black text-white rounded-lg hover:opacity-90 transition"
-                                onClick={analyzeJob}
-                                disabled={isAnalyzed}
+                    {/* Header Section */}
+                    <div className="mb-6">
+                        <div className="flex justify-between items-start gap-4">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">
+                                    {jobDetails.title || "-"}
+                                </h2>
+                                <p className="text-gray-600 mt-1">
+                                    {jobDetails.company || "-"}
+                                </p>
+                                <p className="text-sm text-gray-400">
+                                    {jobDetails.location || "Remote"}
+                                </p>
+                                {!isAnalyzed && <button
+                                    className="inline-block mt-2 px-6 py-2 text-[14px] mb-4 bg-black text-white rounded-lg hover:opacity-90 transition"
+                                    onClick={analyzeJob}
+                                    disabled={isAnalyzed}
+                                >
+                                    {isLoading ? "...Server Request" : "Analyze Job"}
+                                </button>}
+                            </div>
+
+                            <span
+                                className={`px-3 py-1 text-xs font-semibold rounded-full border ${getBadgeStyles()}`}
                             >
-                                {isLoading?"...Server Request":"Analyze Job"}
-                            </button>}
+                                {isAnalyzed
+                                    ? `AI Score: ${score}`
+                                    : "Not Rated"}
+                            </span>
                         </div>
-
-                        <span
-                            className={`px-3 py-1 text-xs font-semibold rounded-full border ${getBadgeStyles()}`}
-                        >
-                            {isAnalyzed
-                                ? `AI Score: ${score}`
-                                : "Not Rated"}
-                        </span>
                     </div>
-                </div>
 
-                {/* Divider */}
-                <div className="border-t mb-6" />
-                <Accordion items={faqItems} />
+                    {/* Divider */}
+                    <div className="border-t mb-6" />
+                    <Accordion items={faqItems} />
+                </div>
             </div>
-        </div>
+            <ToastMessage message={message} type={type} />
+        </>
     );
 };
 
