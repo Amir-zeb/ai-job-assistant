@@ -32,10 +32,12 @@ export default async function JobsPage() {
     }));
 
     return (
-        <div className="min-h-screen bg-gray-50 relative">
-            <Link href="/">
-                <h1 className="text-2xl border-b p-2 bg-white">Dashboard</h1>
-            </Link>
+        <div className="min-h-screen relative">
+            <div className="text-2xl p-2 border-b border-(--primary)">
+                <Link href="/">
+                    <span className="text-(--primary)">Dashboard</span>
+                </Link>
+            </div>
             <JobList jobs={formattedJobs} />
         </div>
     );
