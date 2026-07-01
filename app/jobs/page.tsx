@@ -4,6 +4,7 @@ import { JobT } from "@/lib/types";
 
 import JobList from "./_components/jobList";
 import Link from "next/link";
+import Header from "./_components/header";
 
 export default async function JobsPage() {
     await connectDB();
@@ -33,12 +34,15 @@ export default async function JobsPage() {
 
     return (
         <div className="min-h-screen relative">
-            <div className="text-2xl p-2 border-b border-(--primary)">
-                <Link href="/">
-                    <span className="text-(--primary)">Dashboard</span>
+            <Header />
+            <JobList jobs={formattedJobs} />
+            <div className="fixed bottom-4 right-4">
+                <Link href="/jobs/create" className="bg-(--secondary) text-(--primary) px-4 py-2 rounded shadow"
+                    title="Add a new job"
+                >
+                    +
                 </Link>
             </div>
-            <JobList jobs={formattedJobs} />
         </div>
     );
 }
