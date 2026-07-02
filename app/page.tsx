@@ -3,6 +3,8 @@ import AiUsage from "@/lib/models/AiUsage";
 import Job from "@/lib/models/Job";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   await connectDB();
 

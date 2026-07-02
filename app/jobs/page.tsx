@@ -6,6 +6,8 @@ import JobList from "./_components/jobList";
 import Link from "next/link";
 import Header from "./_components/header";
 
+export const dynamic = "force-dynamic";
+
 export default async function JobsPage() {
     await connectDB();
     const jobs = await Job.find()
