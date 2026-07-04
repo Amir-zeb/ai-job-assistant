@@ -1,174 +1,334 @@
-# AI Job Filtering & Rating Agent
 
-An automated AI-powered job filtering system that fetches remote jobs, analyzes them using Gemini AI, and ranks them based on relevance to a predefined MERN stack developer profile.
+# AI Job Assistant
 
-This project demonstrates:
+An AI-powered job assistant that helps software developers discover, prioritize, and prepare for job applications. It combines deterministic rule-based filtering with Gemini AI to analyze job opportunities, recommend whether to apply, identify missing skills, and generate personalized application materials.
 
--   Background job processing
--   AI integration    
--   Rate limiting & quota management
--   Prompt optimization
--   Cron-based automation
--   Cost-aware system design
+Version 1 of this project is available in the `version-1` branch.
 
-## Screenshots
+----------
 
-![Screenshot 1](public/screenshot-1.png)
-![Screenshot 2](public/screenshot-2.png)
-![Screenshot 3](public/screenshot-3.png)
-![Screenshot 4](public/screenshot-4.png)
+## Why I Built This
 
-## What This Project Does
+Most job trackers just list postings. I wanted something that actually reasons about fit — scoring relevance before spending AI calls, then using AI only where it adds real value: matching, gap analysis, and drafting application materials. It's also a practical exercise in agent-oriented architecture and cost-aware AI system design.
 
-### 1️⃣ Fetch Jobs Automatically
+----------
 
--   Fetches job listings from RemoteOK API
--   Runs every 15 minutes (cron job)
+## Features
+
+### Job Aggregation
+
+-   Fetches jobs from external job APIs via a dedicated API route (`/api/jobs/fetch`), triggered manually — no UI button yet
 -   Stores jobs in MongoDB
-    
-### 2️⃣ AI-Based Job Rating
+-   Prevents duplicate entries
+-   Supports manually adding jobs via a form
 
--   Uses Gemini AI (`gemini-2.5-flash`)
--   Scores each job from 0–100
--   Marks jobs as relevant if score ≥ 60
--   Strict JSON schema enforcement for stable responses
-    
-### 3️⃣ Smart AI Usage Control
+### Rule-Based Analysis
 
--   Free-tier Gemini limit: 20 requests/day
--   Daily quota tracking in MongoDB
--   Only increments usage when AI is actually called
--   Skips irrelevant jobs before AI call (cost optimization)
+Every fetched job is analyzed before AI is involved. The rule-based engine:
 
-### 4️⃣ Background Processing
+-   Calculates an **Interest Score** (0–100)
+-   Determines whether the job is relevant
+-   Prioritizes jobs in the dashboard
+-   Filters out low-value jobs before AI analysis
 
--   Separate cron jobs:
-    -   Job fetching
-    -   AI rating (one job at a time)
--   Lightweight queue-like behavior without Redis
+This reduces unnecessary AI requests and keeps the system cost-efficient.
 
-## Architecture Overview
+### AI Job Analysis
 
-RemoteOK API  
-		↓  
-Fetch Cron (15 min)  
-		↓  
-MongoDB (Jobs stored)  
-		↓  
-Rating Cron  
-		↓  
-Gemini AI  
-		↓	  
-Job Score + Relevance
+For relevant jobs, the assistant runs a full AI analysis using Gemini. The AI evaluates:
+
+-   Overall job match (AI Score)
+-   Recommendation (Apply / Consider / Skip)
+-   Match reasoning
+-   Candidate strengths
+-   Missing skills to learn
+-   Salary assessment
+-   Professional cover letter
+-   Professional application email
+
+### AI Usage Management
+
+Built around Gemini's free tier:
+
+-   Daily request tracking
+-   Request quota management
+-   Cost-aware AI usage
+-   AI analysis only when explicitly requested
+
+----------
+
+
+## Screenshots 
+### Dashboard
+ ![Dashboard](public/screenshot-1.png) 
+### AI Job Analysis 
+ ![AI Analysis](public/screenshot-2.png)
+ ![AI Analysis](public/screenshot-3.png)
+### Manually Add Job
+ ![AI Analysis](public/screenshot-4.png)
+
+-----
+
+## Project Architecture
+
+The project follows a modular architecture where responsibilities are separated into dedicated directories. Job-related logic lives under a `jobs` module, rule-based filtering and scoring are isolated in a `ruleBasedAnalysis` module, AI-specific functionality is grouped under an `ai` module, and agent orchestration sits in an `agent` module. This keeps business logic independent from API routes, making the codebase easier to maintain and extend.
+
+The `/api/agent/analyze` endpoint acts as the entry point for job analysis. It validates the request, loads the selected job, checks whether it has already been analyzed, and then delegates the analysis workflow to the agent layer. The agent coordinates the process, while AI generation, prompt construction, response parsing, and database updates are handled by their respective modules. This keeps the API route lightweight and ensures each part of the application has a single, well-defined responsibility.
+
+```
+ai-job-agent
+├─ app
+│  ├─ api
+│  │  ├─ agent
+│  │  │  └─ analyze
+│  │  │     └─ route.ts
+│  │  └─ jobs
+│  │     ├─ create
+│  │     │  └─ route.ts
+│  │     └─ fetch
+│  │        └─ route.ts
+│  ├─ components
+│  │  ├─ accordion.tsx
+│  │  ├─ badge.tsx
+│  │  ├─ button.tsx
+│  │  └─ toast.tsx
+│  ├─ jobs
+│  │  ├─ create
+│  │  │  └─ page.tsx
+│  │  ├─ page.tsx
+│  │  └─ _components
+│  │     ├─ header.tsx
+│  │     ├─ jobCard.tsx
+│  │     ├─ jobDetails.tsx
+│  │     └─ jobList.tsx
+│  ├─ layout.tsx
+│  └─ page.tsx
+├─ lib
+│  ├─ agent
+│  │  └─ analyzeJob.ts
+│  ├─ ai
+│  │  ├─ analyzeJobWithAI.ts
+│  │  ├─ gemini.ts
+│  │  ├─ profile.ts
+│  │  ├─ prompts
+│  │  │  └─ jobAnalysis.ts
+│  │  ├─ schemas
+│  │  │  └─ jobAnalysis.ts
+│  │  └─ usage.ts
+│  ├─ cron.ts
+│  ├─ db.ts
+│  ├─ models
+│  │  ├─ AiUsage.ts
+│  │  └─ Job.ts
+│  ├─ ruleBasedAnalysis
+│  │  ├─ relevance.ts
+│  │  └─ score.ts
+│  └─ types.ts
+├─ public
+│  └─ (screenshots, icons)
+├─ docker-compose.yml
+├─ Dockerfile
+├─ package.json
+└─ README.md
+
+```
+
+### Agent Layer
+
+Entry point at `/api/agent/analyze`, with the workflow logic in `/lib/agent/analyzeJob.ts`. Responsibilities:
+
+-   Validate requests
+-   Load the selected job
+-   Check for previous analysis
+-   Delegate the workflow to the agent layer
+
+### AI Layer
+
+Responsible for:
+
+-   Prompt construction
+-   Candidate profile
+-   Gemini integration
+-   Structured JSON generation
+-   Response parsing
+
+### Rule-Based Analysis
+
+Contains deterministic logic for:
+
+-   Interest Score calculation
+-   Job relevance detection
+
+### Jobs Module
+
+Responsible for:
+
+-   Database operations
+-   Job services
+-   Business logic
+
+----------
 
 ## Tech Stack
 
 -   Next.js (App Router)
 -   TypeScript
--   MongoDB + Mongoose
--   Gemini AI (Google Generative AI SDK)
--   node-cron
+-   MongoDB
+-   Mongoose
+-   Gemini 2.5 Flash
 -   REST APIs
 
-## Job Rating Logic
+----------
 
-Before calling AI:
--   Filters jobs without relevant JS stack keywords
--   Skips AI call if clearly irrelevant
--   Reduces token usage significantly
-    
-AI Prompt:
--   Strict scoring rules
--   Deterministic output (low temperature)
--   Enforced JSON schema
--   Short explanation (≤ 20 words)
+## AI Workflow
+
+```
+Job API
+   │
+   ▼
+Fetch Jobs
+   │
+   ▼
+Rule-Based Analysis
+   │
+   ├── Not Relevant → Display only
+   │
+   ▼
+MongoDB
+   │
+   ▼
+Analyze Job
+   │
+   ▼
+Gemini AI
+   │
+   ▼
+Analysis
+   ├── AI Score
+   ├── Recommendation
+   ├── Strengths
+   ├── Missing Skills
+   ├── Salary Assessment
+   ├── Cover Letter
+   └── Email
+
+```
+
+----------
+
+## Current AI Output
+
+For every analyzed job, the assistant generates:
+
+-   AI Score
+-   Recommendation
+-   Reason
+-   Strengths
+-   Missing Skills
+-   Salary Assessment
+-   HTML Cover Letter
+-   HTML Application Email
+
+----------
 
 ## Installation & Setup
 
-### 1️⃣ Clone the repository
+### Prerequisites
 
-    git clone https://github.com/your-username/your-repo-name.git  
-    cd your-repo-name
+-   Node.js 20+
+-   npm
+-   MongoDB (local or MongoDB Atlas)
+-   A Gemini API key
 
-### 2️⃣ Install dependencies
+### 1. Clone the repository
 
-    npm install
+```bash
+git clone https://github.com/Amir-zeb/ai-job-assistant.git
+cd ai-job-assistant
 
-### 3️⃣ Create `.env.local`
+```
 
-    MONGODB_URI=your_mongodb_connection_string  
-    GEMINI_API_KEY=your_gemini_api_key  
-    DOMAIN=http://localhost:3000
+### 2. Install dependencies
 
-### 4️⃣ Run the project
+```bash
+npm install
 
-    npm run dev
+```
 
-Server will run at:
+### 3. Create `.env.local`
 
-    http://localhost:3000
+```
+MONGODB_URI=your_mongodb_connection_string
+GEMINI_API_KEY=your_gemini_api_key
+DOMAIN=http://localhost:3000
 
-## Cron Jobs
+```
 
-Two background cron tasks:
+### 4. Run the project
 
-### 🔹 Job Fetch Cron
+```bash
+npm run dev
 
--   Runs every 15 minutes
--   Fetches jobs from RemoteOK
--   Saves or updates in MongoDB
+```
 
-### 🔹 Job Rating Cron
+The application will be available at `http://localhost:3000`.
 
--   Runs every 15 seconds
--   Picks one unrated job
--   Checks daily AI quota
--   Sends to Gemini for scoring
--   Updates DB with results
+### Running with Docker
 
-## MongoDB Collections
+A Dockerfile and Docker Compose configuration are included for containerized development and testing.
 
-### Jobs
+```bash
+docker compose up --build
 
--   title    
--   company
--   description
--   aiScore
--   isRelevant
--   aiReason
--   aiRated
+```
 
-### AiUsage
+Or in detached mode:
 
--   date (YYYY-MM-DD)
--   count (daily AI usage)
+```bash
+docker compose up -d --build
 
-## AI Daily Limit Handling
+```
 
--   Max 20 Gemini requests per day
--   Auto-resets by date
--   Only increments counter if request is actually sent
--   Returns 429 if limit reached
+The application will be available at `http://localhost:3000`.
 
-## Security Considerations
+**Notes:**
 
--   HTML stripped from job descriptions before AI processing
--   JSON schema enforced for AI responses
--   Environment variables required for API keys
+-   Ensure your MongoDB instance is accessible from the application.
+-   A valid Gemini API key is required for AI-powered job analysis.
+-   The project is designed to work within Gemini's free-tier limits through built-in usage tracking and optimized AI requests.
+
+----------
 
 ## Learning Objectives
 
-This project helped me practice:
+This project focuses on learning and applying:
 
--   AI integration in backend systems
--   Structured output using JSON schema
--   Cost-aware system design
--   Cron-based background processing
--   Prompt optimization
--   Real-world API handling
+-   AI-assisted application workflows
+-   Agent-oriented architecture
+-   Prompt engineering
+-   Structured JSON generation
+-   Modular backend design
+-   Cost-aware AI systems
+-   Background job processing
+-   REST API integration
+
+----------
+
+## Repository
+
+-   **main** — Current AI Job Assistant
+-   **version-1** — Original AI Job Filtering & Rating Agent
+
+----------
+
+## License
+
+MIT
+
+----------
 
 ## Author
 
-**Amir Zeb**  
-Full Stack Developer  
-Focused on building scalable, AI-integrated systems.
+**Amir Zeb** Full Stack MERN Developer Building practical AI-powered applications with modern web technologies.
+
+[LinkedIn](https://linkedin.com/in/amir-zeb/) · [Portfolio](https://portfolio-v2-66d20.web.app/) · amirzeb695@gmail.com
