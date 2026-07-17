@@ -327,8 +327,4 @@ MIT
 
 ----------
 
-## Author
-
-**Amir Zeb** Full Stack MERN Developer Building practical AI-powered applications with modern web technologies.
-
-[LinkedIn](https://linkedin.com/in/amir-zeb/) · [Portfolio](https://portfolio-v2-66d20.web.app/) · amirzeb695@gmail.com
+##### Develop by **Amir Zeb**.
